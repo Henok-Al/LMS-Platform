@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, BookOpen, LayoutDashboard, Settings } from "lucide-react";
+import { ThemeToggle } from "../theme/theme-toggle";
 
 export function Navbar() {
   // Mock user data since we removed authentication
@@ -30,6 +31,20 @@ export function Navbar() {
             LMS Platform
           </span>
         </Link>
+
+        <div className="flex items-center space-x-2">
+          <ThemeToggle />
+          <Link href="/auth/login">
+            <Button variant="outline" size="sm">
+              Login
+            </Button>
+          </Link>
+          <Link href="/auth/register">
+            <Button variant="primary" size="sm">
+              Register
+            </Button>
+          </Link>
+        </div>
 
         <div className="ml-auto flex items-center space-x-4">
           <div className="flex items-center space-x-2">
