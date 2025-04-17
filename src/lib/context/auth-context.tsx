@@ -5,6 +5,8 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   AuthError,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase/config";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -17,6 +19,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -109,8 +112,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      const userDoc = await getDoc(doc(db, "users", result.user.uid));
+      
+      if (!userDoc.exists()) {
+        const newUser: User = {
+          id: result.user.uid,
+          email: result.user.email!,
+          name: result.user.displayName || "User",
+          role: "user",
+          createdAt: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          enrolledCourses: [],
+          completedLessons: {},
+          progress: {},
+          completedCourses: []
+        };
+        
+        await setDoc(doc(db, "users", result.user.uid), newUser);
+        setUser(newUser);
+      } else {
+        setUser(userDoc.data() as User);
+      }
+      
+      router.push("/courses");
+      toast.success("Successfully signed in with Google!");
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Google sign in error:", authError);
+      toast.error(authError.message || "Failed to sign in with Google");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp }}>
+    <AuthContext.Provider value={{ user, loading, signUp,signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

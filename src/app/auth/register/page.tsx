@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/context/auth-context";
 
 export default function RegisterPage() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const formRef = useRef<HTMLFormElement>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,12 +53,26 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+
+    try {
+      await signInWithGoogle();
+      toast.success("Signed in with Google successfully!");
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      toast.error("Failed to sign in with Google");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   function getErrorMessage(error: unknown): string {
-    if (typeof error !== 'object' || error === null) {
+    if (typeof error !== "object" || error === null) {
       return "An unknown error occurred";
     }
 
-    if ('message' in error && typeof error.message === 'string') {
+    if ("message" in error && typeof error.message === "string") {
       return error.message;
     }
 
@@ -81,12 +95,7 @@ export default function RegisterPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="John Doe"
-                  required
-                />
+                <Input id="name" name="name" placeholder="John Doe" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -135,6 +144,7 @@ export default function RegisterPage() {
                 type="button"
                 variant="outline"
                 className="w-full"
+                onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >
                 <svg
