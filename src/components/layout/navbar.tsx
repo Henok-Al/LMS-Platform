@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@/lib/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,16 +12,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, BookOpen, LayoutDashboard, Settings } from "lucide-react";
-import { ThemeToggle } from "../theme/theme-toggle";
+import {
+  LogOut,
+  User,
+  BookOpen,
+  LayoutDashboard,
+  Settings,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function Navbar() {
-  // Mock user data since we removed authentication
-  const mockUser = {
-    name: "Guest",
-    email: "guest@example.com",
-  };
-  const isAdmin = false;
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
@@ -32,86 +34,95 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="flex items-center space-x-2">
-          <ThemeToggle />
-          <Link href="/auth/login">
-            <Button variant="outline" size="sm">
-              Login
-            </Button>
-          </Link>
-          <Link href="/auth/register">
-            <Button variant="primary" size="sm">
-              Register
-            </Button>
-          </Link>
-        </div>
-
         <div className="ml-auto flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Link href="/courses">
-              <Button
-                variant="ghost"
-                className="text-gray-600 dark:text-gray-300"
-              >
-                Courses
-              </Button>
-            </Link>
+          <ThemeToggle />
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+          {!user ? (
+            <div className="flex items-center space-x-2">
+              <Link href="/auth/login">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button variant="primary" size="sm">
+                  Register
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <>
+              <Link href="/courses">
                 <Button
                   variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
+                  className="text-gray-600 dark:text-gray-300"
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="" alt={mockUser.name} />
-                    <AvatarFallback className="bg-gradient-to-r from-blue-600 to-blue-400 text-white">
-                      {mockUser.name?.charAt(0) ||
-                        mockUser.email?.charAt(0) ||
-                        "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                  Courses
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56 bg-background backdrop-blur-md border-border"
-                align="end"
-                forceMount
-              >
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {mockUser.name}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {mockUser.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="flex items-center">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                {isAdmin && (
+              </Link>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="" alt={user.name} />
+                      <AvatarFallback className="bg-gradient-to-r from-blue-600 to-blue-400 text-white">
+                        {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-56 bg-background backdrop-blur-md border-border"
+                  align="end"
+                  forceMount
+                >
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.name}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="flex items-center">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+
                   <DropdownMenuItem asChild>
                     <Link href="/admin" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
                       Admin Panel
                     </Link>
                   </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => signOut()}
+                    className="flex items-center cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </div>
     </nav>

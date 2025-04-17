@@ -7,6 +7,8 @@ import {
   AuthError,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase/config";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -20,6 +22,8 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,9 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       const userDoc = await getDoc(doc(db, "users", result.user.uid));
-      
+
       if (!userDoc.exists()) {
         const newUser: User = {
           id: result.user.uid,
@@ -131,15 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           enrolledCourses: [],
           completedLessons: {},
           progress: {},
-          completedCourses: []
+          completedCourses: [],
         };
-        
+
         await setDoc(doc(db, "users", result.user.uid), newUser);
         setUser(newUser);
       } else {
         setUser(userDoc.data() as User);
       }
-      
+
       router.push("/courses");
       toast.success("Successfully signed in with Google!");
     } catch (error) {
@@ -152,8 +156,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as User;
+        setUser(userData);
+
+        if (userData.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/courses");
+        }
+
+        toast.success("Successfully signed in!");
+      }
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Sign in error:", authError);
+      toast.error(authError.message || "Failed to sign in");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+      router.push("/");
+      toast.success("Successfully signed out!");
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Sign out error:", authError);
+      toast.error(authError.message || "Failed to sign out");
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp,signInWithGoogle }}>
+    <AuthContext.Provider
+      value={{ user, loading, signUp, signInWithGoogle, signIn,signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );
