@@ -13,17 +13,17 @@ export function ProtectedRoute({
   children,
   adminOnly = false,
 }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
         window.location.href = "/auth/login";
-      } else if (adminOnly) {
+      } else if (adminOnly && !isAdmin) {
         window.location.href = "/dashboard";
       }
     }
-  }, [user, loading, adminOnly]);
+  }, [user, loading, isAdmin, adminOnly]);
 
   if (loading) {
     return (
@@ -37,7 +37,7 @@ export function ProtectedRoute({
   }
 
   // If not loading and we have a user (and admin if required), render the children
-  if (user && !adminOnly) {
+  if (user && (!adminOnly || isAdmin)) {
     return <>{children}</>;
   }
 
