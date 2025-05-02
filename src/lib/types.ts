@@ -32,3 +32,33 @@ export interface User {
   progress: Record<string, number>;
   completedCourses: string[];
 }
+
+// Dashboard Stats interface
+export interface DashboardStats {
+  totalUsers: number;
+  totalCourses: number;
+  totalEnrollments: number;
+  completionRate: number;
+}
+
+// Analytics interface
+export interface Analytics {
+  monthlyEnrollments: {
+    month: string;
+    enrollments: number;
+  }[];
+  coursePopularity: {
+    courseId: string;
+    enrollments: number;
+  }[];
+  userActivity: {
+    date: string;
+    activeUsers: number;
+  }[];
+  platformStats: {
+    totalRevenue: number;
+    averageRating: number;
+    completionRate: number;
+    activeStudents: number;
+  };
+}
